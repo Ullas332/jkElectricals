@@ -33,7 +33,14 @@ const haltOnTimeout = (req, res, next) => {
 };
 
 // ── 4. Security headers ────────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+            "upgrade-insecure-requests": null, // Stops browser from forcing HTTPS
+        },
+    },
+}));
 
 // ── 5. Request logging ─────────────────────────────────────────────────────
 app.use(morgan("combined"));

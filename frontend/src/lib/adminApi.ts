@@ -1,4 +1,8 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
+
+if (!API_URL) {
+  throw new Error("VITE_API_URL is not defined");
+}
 
 // All admin API calls go through this — attaches Clerk JWT automatically
 const adminFetch = async (path: string, token: string, options: RequestInit = {}) => {

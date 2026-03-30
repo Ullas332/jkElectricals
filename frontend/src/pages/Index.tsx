@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Shield, Clock, Star, Phone, ArrowRight, Award, Users,
-  CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ZoomIn, X,
+  CheckCircle2, Mail
 } from "lucide-react";
 
 // Client Logos
@@ -15,11 +15,15 @@ import tritonLogo from "@/assets/triton.png";
 import cescLogo from "@/assets/cesc.png";
 import lunarsLogo from "@/assets/lunars.png";
 import hitachiLogo from "@/assets/hitachi.png";
+import barcLogo from "@/assets/BARC.png";
+import raneLogo from "@/assets/rane.jpg";
+import mysoreUniversityLogo from "@/assets/mysoreUniversity.jpg";
 
 // Hero Images
 import hero1 from "@/assets/hero1.jpg";
 import hero2 from "@/assets/hero2.jpeg";
-import hero3 from "@/assets/hero3.jpeg";
+import heroMain from "@/assets/hero.jpeg";
+import heroes1 from "@/assets/heroes1.jpeg";
 
 // Gallery — 11 Photos
 import gallery1 from "@/assets/gallery1.jpeg";
@@ -35,6 +39,7 @@ import gallery10 from "@/assets/gallery10.jpeg";
 import gallery11 from "@/assets/gallery11.jpeg";
 
 import SectionHeading from "@/components/SectionHeading";
+import CTA from "@/components/CTA";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WhatsApp Icon
@@ -136,286 +141,6 @@ const RollingCounter = ({ value, suffix = "", delayOffset = 0 }: { value: number
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Gallery data
-// ─────────────────────────────────────────────────────────────────────────────
-type MediaItem = { type: "photo"; src: string; label: string };
-
-const GALLERY: MediaItem[] = [
-  { type: "photo", src: gallery1, label: "Substation Installation" },
-  { type: "photo", src: gallery2, label: "HT Cable Laying" },
-  { type: "photo", src: gallery3, label: "Control Panel Assembly" },
-  { type: "photo", src: gallery4, label: "Industrial Switchgear" },
-  { type: "photo", src: gallery5, label: "Metering Cubicle Setup" },
-  { type: "photo", src: gallery6, label: "Factory Electrification" },
-  { type: "photo", src: gallery7, label: "Overhead Line Works" },
-  { type: "photo", src: gallery8, label: "Site Operations" },
-  { type: "photo", src: gallery9, label: "Electrical Infrastructure" },
-  { type: "photo", src: gallery10, label: "Industrial Wiring" },
-  { type: "photo", src: gallery11, label: "Project Completion" },
-];
-
-const SLIDE_DURATION = 4500;
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Lightbox
-// ─────────────────────────────────────────────────────────────────────────────
-const Lightbox = ({
-  index,
-  onClose,
-  onPrev,
-  onNext,
-}: {
-  index: number;
-  onClose: () => void;
-  onPrev: () => void;
-  onNext: () => void;
-}) => {
-  const item = GALLERY[index];
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") onNext();
-      if (e.key === "ArrowLeft") onPrev();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose, onNext, onPrev]);
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, []);
-
-  return (
-    <div
-      className="fixed inset-0 z-[999] flex items-center justify-center"
-      style={{ animation: "lbFadeIn 0.22s ease forwards" }}
-    >
-      <div
-        className="absolute inset-0 bg-black/92 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <div
-        className="relative z-10 flex flex-col items-center max-w-[92vw] max-h-[92vh]"
-        style={{ animation: "lbScaleIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards" }}
-      >
-        <img
-          src={item.src}
-          alt={item.label}
-          className="max-w-full max-h-[80vh] rounded-xl object-contain shadow-2xl"
-          draggable={false}
-        />
-        <div className="mt-4 flex items-center gap-4">
-          <span className="text-white/50 text-xs tabular-nums">{index + 1} / {GALLERY.length}</span>
-          <span className="text-white font-medium text-sm">{item.label}</span>
-        </div>
-      </div>
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-200 hover:scale-110"
-      >
-        <X className="h-5 w-5" />
-      </button>
-      <button
-        onClick={(e) => { e.stopPropagation(); onPrev(); }}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-[#00B4D8] backdrop-blur-sm flex items-center justify-center text-white transition-all duration-200 hover:scale-110"
-      >
-        <ChevronLeft className="h-5 w-5" />
-      </button>
-      <button
-        onClick={(e) => { e.stopPropagation(); onNext(); }}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-[#00B4D8] backdrop-blur-sm flex items-center justify-center text-white transition-all duration-200 hover:scale-110"
-      >
-        <ChevronRight className="h-5 w-5" />
-      </button>
-      <style>{`
-        @keyframes lbFadeIn  { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes lbScaleIn { from { opacity: 0; transform: scale(0.92) } to { opacity: 1; transform: scale(1) } }
-      `}</style>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GalleryShowcase — multi-card focus carousel with Ken Burns + lightbox
-// ─────────────────────────────────────────────────────────────────────────────
-const GalleryShowcase = () => {
-  const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [lightbox, setLightbox] = useState<number | null>(null);
-  const N = GALLERY.length;
-
-  const rafRef = useRef<number>(0);
-  const elapsedRef = useRef<number>(0);
-  const lastTsRef = useRef<number>(0);
-
-  const goTo = useCallback((next: number) => {
-    cancelAnimationFrame(rafRef.current);
-    elapsedRef.current = 0;
-    lastTsRef.current = 0;
-    setActive(((next % N) + N) % N);
-  }, [N]);
-
-  const goNext = useCallback(() => goTo(active + 1), [active, goTo]);
-  const goPrev = useCallback(() => goTo(active - 1), [active, goTo]);
-
-  useEffect(() => {
-    if (paused || lightbox !== null) {
-      cancelAnimationFrame(rafRef.current);
-      lastTsRef.current = 0;
-      return;
-    }
-    const tick = (ts: number) => {
-      if (lastTsRef.current) {
-        elapsedRef.current += ts - lastTsRef.current;
-      }
-      lastTsRef.current = ts;
-
-      if (elapsedRef.current < SLIDE_DURATION) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        elapsedRef.current = 0;
-        lastTsRef.current = 0;
-        goNext();
-      }
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [active, paused, lightbox, goNext]);
-
-  const dist = (i: number) => {
-    const d = ((i - active) % N + N) % N;
-    return d > N / 2 ? d - N : d;
-  };
-
-  return (
-    <>
-      {lightbox !== null && (
-        <Lightbox
-          index={lightbox}
-          onClose={() => setLightbox(null)}
-          onPrev={() => setLightbox((((lightbox - 1) % N) + N) % N)}
-          onNext={() => setLightbox((lightbox + 1) % N)}
-        />
-      )}
-
-      <div className="select-none">
-        <div
-          className="relative overflow-hidden"
-          style={{
-            // Increased height to accommodate the wider 16:9 cards
-            height: "clamp(300px, 45vw, 600px)",
-            maskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-          }}
-        >
-          {GALLERY.map((item, i) => {
-            const d = dist(i);
-            const abs = Math.abs(d);
-            if (abs > 2) return null;
-
-            const isActive = d === 0;
-            // Increased translation step (65) so the wider side cards don't overlap too much
-            const tx = d * 65;
-            const scale = isActive ? 1 : abs === 1 ? 0.75 : 0.55;
-            const opacity = isActive ? 1 : abs === 1 ? 0.45 : 0.15;
-            const zIndex = isActive ? 10 : abs === 1 ? 5 : 1;
-
-            return (
-              <div
-                key={i}
-                onClick={() => isActive ? setLightbox(i) : goTo(i)}
-                onMouseEnter={isActive ? () => setPaused(true) : undefined}
-                onMouseLeave={isActive ? () => setPaused(false) : undefined}
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  // Enlarged the width significantly
-                  width: "clamp(300px, 60%, 900px)",
-                  // Changed to 16:9 widescreen format
-                  aspectRatio: "16/9",
-                  transform: `translate(-50%, -50%) translateX(${tx}%) scale(${scale})`,
-                  opacity,
-                  zIndex,
-                  transition: "transform 0.65s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.65s cubic-bezier(0.25, 1, 0.5, 1)",
-                  cursor: isActive ? "zoom-in" : "pointer",
-                }}
-                className="rounded-2xl overflow-hidden shadow-2xl group"
-              >
-                <img
-                  src={item.src}
-                  alt={item.label}
-                  draggable={false}
-                  className="w-full h-full object-cover"
-                />
-
-                {isActive && (
-                  <>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
-
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                      <div className="bg-black/50 backdrop-blur-sm rounded-full p-4">
-                        <ZoomIn className="h-7 w-7 text-white" />
-                      </div>
-                    </div>
-
-                    <div className="absolute bottom-0 inset-x-0 px-6 py-5 pointer-events-none flex items-end justify-between">
-                      <p className="text-white font-bold text-lg md:text-xl drop-shadow-lg tracking-wide">
-                        {item.label}
-                      </p>
-                      <span className="text-white/60 text-sm font-medium tabular-nums">{active + 1} / {N}</span>
-                    </div>
-                  </>
-                )}
-
-                {!isActive && (
-                  <div className="absolute inset-0 bg-[#0A3A5C]/50 pointer-events-none rounded-2xl" />
-                )}
-              </div>
-            );
-          })}
-
-          <button
-            onClick={goPrev}
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-            className="absolute left-[4%] top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/40 hover:bg-[#00B4D8] backdrop-blur-sm flex items-center justify-center text-white transition-all duration-200 hover:scale-110"
-          >
-            <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
-          </button>
-          <button
-            onClick={goNext}
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-            className="absolute right-[4%] top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/40 hover:bg-[#00B4D8] backdrop-blur-sm flex items-center justify-center text-white transition-all duration-200 hover:scale-110"
-          >
-            <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
-          </button>
-        </div>
-
-        <div className="flex items-center justify-center gap-2 mt-8">
-          {GALLERY.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              onMouseEnter={() => setPaused(true)}
-              onMouseLeave={() => setPaused(false)}
-              aria-label={`Go to slide ${i + 1}`}
-              style={{ transition: "all 0.4s cubic-bezier(0.25, 1, 0.5, 1)" }}
-              className={`rounded-full h-2.5 ${i === active
-                ? "w-8 bg-[#00B4D8] shadow-[0_0_10px_rgba(0,180,216,0.8)]"
-                : "w-2.5 bg-white/30 hover:bg-white/60"
-                }`}
-            />
-          ))}
-        </div>
-
-      </div>
-    </>
-  );
-};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Static data
@@ -459,6 +184,9 @@ const clientLogos = [
   { name: "Lunars", logo: lunarsLogo, customWidth: "w-[55%]" },
   { name: "Hitachi", logo: hitachiLogo, customWidth: "w-[60%]" },
   { name: "TVS", logo: tvsLogo, customWidth: "w-[170%] max-w-[170%]" },
+  { name: "BARC", logo: barcLogo, customWidth: "w-[85%]" },
+  { name: "Rane", logo: raneLogo, customWidth: "w-[85%]" },
+  { name: "Mysore University", logo: mysoreUniversityLogo, customWidth: "w-[80%]" },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -474,7 +202,7 @@ const HomePage = () => {
 
   const [showMoreHighlights, setShowMoreHighlights] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const heroSlides = [hero1, hero2, hero3];
+  const heroSlides = [hero1, hero2, heroMain, heroes1];
 
   useEffect(() => {
     const t = setInterval(() => setCurrentSlide((p) => (p + 1) % heroSlides.length), 6000);
@@ -507,103 +235,108 @@ const HomePage = () => {
         @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
       `}</style>
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-slate-900">
-        {heroSlides.map((slide, i) => (
-          <div
-            key={i}
-            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${i === currentSlide ? "opacity-100" : "opacity-0"}`}
-            style={{ backgroundImage: `url(${slide})` }}
-          />
-        ))}
-        <div className="absolute inset-0 bg-black/45" />
-        <div className="relative z-10 text-center px-4 py-20 max-w-4xl mx-auto">
-          <p className="text-white/90 font-medium text-xs sm:text-sm uppercase tracking-[0.15em] mb-4 animate-fade-in-up">
-            SUPER GRADE ELECTRICAL CONTRACTOR
-          </p>
-          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-tight animate-fade-in-up drop-shadow-sm">
-            JK Electricals
-          </h1>
-          <p className="mt-5 text-lg sm:text-xl text-white/95 max-w-2xl mx-auto animate-fade-in-up-delay-1 font-medium drop-shadow-sm">
-            Industrial & Infrastructure Electrical Solutions
-          </p>
-          <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center mt-10 animate-fade-in-up-delay-2">
-            <Link to="/contact" className="bg-[#00B4D8] hover:bg-[#0096b4] text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 shadow-md">
-              Request a Quote
-            </Link>
-            <a href="tel:+919448069346" className="bg-[#0A3A5C] hover:bg-[#082a43] text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-md">
-              <Phone className="h-5 w-5" /> +91 9448069346
-            </a>
-            <a href="https://wa.me/919448069346" target="_blank" rel="noopener noreferrer"
-              className="bg-[#25D366] text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 hover:bg-[#128C7E] flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
-              <WhatsAppIcon /> +91 9448069346
-            </a>
-          </div>
-        </div>
-      </section>
+      {/* ── Partitioned Hero ─────────────────────────────────────────────── */}
+      <section className="pt-6 pb-12 md:pt-10 md:pb-16 bg-[#f8fafc] relative overflow-hidden">
+        {/* Subtle background decoration */}
+        <div className="absolute top-0 right-0 w-full h-[500px] bg-gradient-to-b from-slate-200/40 to-transparent pointer-events-none" />
 
-      {/* ── Trust Banner ─────────────────────────────────────────────────── */}
-      <section className="bg-primary text-primary-foreground py-5">
-        <div className="container-max px-4 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12">
-          {trustItems.map((item) => (
-            <div key={item.text} className="flex items-center gap-3 text-sm font-medium">
-              <item.icon className="h-5 w-5 text-accent shrink-0" />
-              <span className="text-primary-foreground/90">{item.text}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+        <div className="container-max px-4 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-6">
 
-      {/* ── About ────────────────────────────────────────────────────────── */}
-      <section className="section-padding bg-slate-50 overflow-hidden">
-        <div className="container-max">
-          <div ref={introRef} className="reveal-up space-y-6 max-w-4xl mx-auto flex flex-col items-center text-center">
-            <p className="text-[#00B4D8] font-semibold text-sm uppercase tracking-widest">Who We Are</p>
-            <h2 className="font-display text-3xl md:text-4xl font-extrabold text-slate-800 leading-snug">
-              25+ Years of Trusted<br className="hidden md:block" />
-              <span className="text-[#00B4D8]"> Electrical Excellence</span>
-            </h2>
-            <div className="text-slate-600 text-base leading-relaxed space-y-4 max-w-3xl">
-              <p>
-                JK Electricals is a licensed <strong>Super Grade Electrical Contractor</strong> based in Mysore with over 25 years of experience in industrial, infrastructure, and power sector electrical works. We provide reliable and high-quality electrical solutions for industrial plants, infrastructure projects, and commercial facilities.
-              </p>
-              <p>
-                Our team of experienced engineers, technicians, and electricians delivers professional electrical services while maintaining the highest safety and quality standards.
-              </p>
-            </div>
-            <div className="max-w-3xl mt-6 flex flex-col items-center">
-              <ul className="space-y-3 text-left">
-                {highlights.slice(0, 3).map((point) => (
-                  <li key={point} className="flex items-start gap-3 text-slate-700 text-sm">
-                    <CheckCircle2 className="h-5 w-5 text-[#00B4D8] shrink-0 mt-0.5" />
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className={`grid transition-all duration-500 ease-in-out ${showMoreHighlights ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0 mt-0"} w-full`}>
-                <ul className="space-y-3 overflow-hidden text-left">
-                  {highlights.slice(3).map((point) => (
-                    <li key={point} className="flex items-start gap-3 text-slate-700 text-sm">
-                      <CheckCircle2 className="h-5 w-5 text-[#00B4D8] shrink-0 mt-0.5" />
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
+            {/* Introduction Partition */}
+            <div className="md:col-span-12 lg:col-span-6 bg-white rounded-[2rem] p-8 lg:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 flex flex-col justify-center relative overflow-hidden group">
+              <div className="relative z-10">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 text-[#00B4D8] text-[11px] sm:text-xs font-bold uppercase tracking-[0.15em] w-fit mb-6 sm:mb-8 border border-sky-100">
+                  Super Grade Electrical Contractor
+                </div>
+                <h1 className="font-display text-5xl lg:text-[3.5rem] font-extrabold text-slate-900 leading-[1.1] mb-5 tracking-tight">
+                  <span className="block mb-2">JK Electricals</span>
+                  <span className="text-[#00B4D8] block text-[0.6em] leading-tight drop-shadow-sm">Industrial &amp; Infrastructure Solutions</span>
+                </h1>
+                <p className="text-slate-600 text-base md:text-lg max-w-2xl leading-relaxed">
+                  Delivering reliable, high-quality electrical solutions for commercial facilities, factories, and power projects with over 25 years of trusted engineering excellence.
+                </p>
               </div>
-              <button
-                onClick={() => setShowMoreHighlights(!showMoreHighlights)}
-                className="flex items-center gap-1.5 text-sky-800 font-bold text-sm hover:text-[#00B4D8] transition-colors mt-6 mb-2 focus:outline-none"
-              >
-                {showMoreHighlights ? "View Less" : "View More"}
-                <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showMoreHighlights ? "rotate-180" : ""}`} />
-              </button>
             </div>
-            <Link to="/about" className="inline-flex items-center gap-2 bg-[#00B4D8] text-white font-semibold py-3 px-7 rounded-lg hover:bg-[#0096b4] transition-all duration-300 shadow-sm hover:shadow-md mt-6">
-              Learn More About Us <ArrowRight className="h-4 w-4" />
-            </Link>
+
+            {/* Photos Partition */}
+            <div className="md:col-span-12 lg:col-span-6 rounded-[2rem] overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.06)] relative min-h-[400px] lg:min-h-[450px] border border-slate-200/60">
+              {heroSlides.map((slide, i) => (
+                <div
+                  key={i}
+                  className={`absolute inset-0 bg-cover bg-[center_top] transition-all duration-1000 ease-in-out ${i === currentSlide ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}
+                  style={{ backgroundImage: `url(${slide})` }}
+                />
+              ))}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A3A5C]/90 via-black/20 to-transparent opacity-90 transition-opacity duration-300" />
+              <div className="absolute inset-0 border-4 border-white/10 rounded-[2rem] pointer-events-none" />
+
+            </div>
+
+            {/* Who We Are Partition */}
+            <div className="md:col-span-12 lg:col-span-6 bg-white rounded-[2rem] p-8 lg:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 flex flex-col justify-center relative overflow-hidden group">
+              <div className="relative z-10">
+                <p className="text-[#00B4D8] font-bold text-[1.8rem] lg:text-[2.1rem] leading-tight drop-shadow-sm mb-4">Who We Are</p>
+                <h3 className="font-display text-3xl md:text-3xl lg:text-4xl font-extrabold text-slate-800 leading-[1.2] mb-5 tracking-tight">
+                  25+ Years of Trusted Electrical Excellence
+                </h3>
+                <p className="text-slate-600 text-base md:text-lg leading-relaxed mb-6">
+                  Based in Mysore, we provide reliable and high-quality electrical solutions for industrial plants, infrastructure projects, and commercial facilities. Our experienced team of engineers, technicians, and electricians delivers professional services while maintaining the highest safety and quality standards across all projects.
+                </p>
+                <Link to="/about" className="inline-flex items-center gap-2 text-[#0A3A5C] font-semibold text-sm hover:text-[#00B4D8] transition-colors group-hover:translate-x-1 duration-300">
+                  Read Full Story <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Contacts Partition */}
+            <div className="md:col-span-12 lg:col-span-6 bg-[#0A3A5C] rounded-[2rem] p-8 lg:p-12 shadow-[0_8px_32px_rgba(10,58,92,0.15)] flex flex-col justify-center relative overflow-hidden border border-[#0A3A5C]">
+              <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#00B4D8] rounded-full blur-[100px] opacity-20 pointer-events-none" />
+              <div className="absolute -left-10 -top-10 opacity-[0.03] pointer-events-none">
+                <Phone className="w-64 h-64 text-white" />
+              </div>
+
+              <h3 className="font-display text-2xl md:text-3xl font-bold mb-3 text-white relative z-10">
+                Get in Touch
+              </h3>
+              <p className="text-white/70 mb-8 text-sm md:text-base leading-relaxed max-w-[340px] relative z-10">
+                Connect with our experts right away for queries, project specifications, and detailed estimates.
+              </p>
+
+              <div className="flex flex-col gap-4 relative z-10 w-full mt-auto">
+                <Link to="/contact" className="w-full bg-white hover:bg-slate-50 text-[#0A3A5C] font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-between group">
+                  <span className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-[#00B4D8]" /> Request a Quote
+                  </span>
+                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-[#00B4D8] group-hover:text-white transition-colors">
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
+                </Link>
+                <div className="grid grid-cols-2 gap-4">
+                  <a href="tel:+919448069346" className="bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 text-white font-semibold py-4 px-4 rounded-xl transition-all duration-300 flex flex-col items-center justify-center gap-3 text-center group backdrop-blur-sm">
+                    <div className="bg-white/20 group-hover:bg-white group-hover:text-[#0A3A5C] text-white w-12 h-12 flex items-center justify-center rounded-full shadow-inner transition-colors border border-white/10 mx-auto">
+                      <Phone className="h-5 w-5" />
+                    </div>
+                    <span className="text-sm">Call Us</span>
+                  </a>
+                  <a href="https://wa.me/919448069346" target="_blank" rel="noopener noreferrer"
+                    className="bg-green-500/20 hover:bg-green-500/30 border border-green-400/30 hover:border-green-400/50 text-white font-semibold py-4 px-4 rounded-xl transition-all duration-300 flex flex-col items-center justify-center gap-3 text-center group backdrop-blur-sm">
+                    <div className="bg-green-500/30 group-hover:bg-[#25D366] text-white w-12 h-12 flex items-center justify-center rounded-full shadow-inner transition-colors border border-green-400/20 mx-auto">
+                      <div className="w-5 h-5"><WhatsAppIcon /></div>
+                    </div>
+                    <span className="text-sm">WhatsApp</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
+
+
+
+
 
       {/* ── Stats ────────────────────────────────────────────────────────── */}
       <section className="relative py-24 bg-[#0A3A5C] overflow-hidden">
@@ -687,7 +420,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ── Site Gallery ─────────────────────────────────────────────────── */}
+      {/* ── Site Gallery teaser ──────────────────────────────────────────── */}
       <section className="section-padding bg-[#0A3A5C] overflow-hidden">
         <div className="container-max">
 
@@ -704,36 +437,54 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div ref={galleryCarouselRef} className="reveal-zoom" style={{ transitionDelay: '0.15s' }}>
-            <GalleryShowcase />
+          {/* 6-photo preview grid */}
+          <div ref={galleryCarouselRef} className="reveal-zoom" style={{ transitionDelay: "0.15s" }}>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+              {[gallery1, gallery2, gallery3, gallery4, gallery5, gallery6].map((src, i) => (
+                <Link
+                  key={i}
+                  to="/gallery"
+                  className="relative overflow-hidden rounded-2xl group"
+                  style={{ aspectRatio: "4/3" }}
+                >
+                  <img
+                    src={src}
+                    alt={`Site photo ${i + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    draggable={false}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {/* Last tile — overlay with count */}
+                  {i === 5 && (
+                    <div className="absolute inset-0 bg-black/55 backdrop-blur-[2px] flex flex-col items-center justify-center gap-2">
+                      <span className="text-white font-extrabold text-2xl md:text-3xl">28+</span>
+                      <span className="text-white/80 text-xs font-semibold uppercase tracking-widest">Photos</span>
+                    </div>
+                  )}
+                </Link>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div className="text-center mt-8">
+              <Link
+                to="/gallery"
+                className="inline-flex items-center gap-3 bg-[#00B4D8] hover:bg-[#0096b8] text-white font-bold px-8 py-3.5 rounded-xl transition-all duration-300 shadow-[0_0_24px_rgba(0,180,216,0.3)] hover:shadow-[0_0_36px_rgba(0,180,216,0.5)] hover:-translate-y-0.5"
+              >
+                View Full Gallery
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </div>
           </div>
 
         </div>
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
-      <section className="bg-sky-50 border-t border-sky-100 py-16 text-center px-4">
-        <div className="container-max">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-800 mb-4">
-            Discuss Your Next Industrial Project
-          </h2>
-          <p className="text-slate-600 text-lg mb-8 max-w-2xl mx-auto">
-            From new substation installations to factory electrification and critical maintenance, our engineers are ready to partner with you.
-          </p>
-          <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
-            <a href="https://wa.me/919448069346" target="_blank" rel="noopener noreferrer"
-              className="bg-[#25D366] text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 hover:bg-[#128C7E] flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
-              <WhatsAppIcon /> +91 9448069346
-            </a>
-            <a href="tel:+919448069346" className="bg-[#0A3A5C] text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 hover:bg-[#082a43] inline-flex items-center justify-center gap-2 shadow-sm">
-              <Phone className="h-5 w-5" /> +91 9448069346
-            </a>
-            <Link to="/contact" className="border-2 border-[#00B4D8] text-[#00B4D8] font-semibold py-3 px-8 rounded-lg transition-all duration-300 hover:bg-[#00B4D8] hover:text-white inline-flex items-center justify-center gap-2">
-              Contact Team <ArrowRight className="h-5 w-5" />
-            </Link>
-          </div>
-        </div>
-      </section>
+      <CTA 
+        headline="Powering Your Next Big Project"
+        subtext="Reliable electrical solutions tailored to your requirements."
+      />
     </div>
   );
 };

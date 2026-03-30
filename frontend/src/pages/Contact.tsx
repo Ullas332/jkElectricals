@@ -16,10 +16,25 @@ const ContactPage = () => {
     setError("");
 
     try {
+      // Get reCAPTCHA v3 token
+      const recaptchaToken = await new Promise<string>((resolve, reject) => {
+        const grecaptcha = (window as any).grecaptcha;
+        if (!grecaptcha) {
+          reject(new Error("reCAPTCHA not loaded. Please refresh and try again."));
+          return;
+        }
+        grecaptcha.ready(() => {
+          grecaptcha
+            .execute(import.meta.env.VITE_RECAPTCHA_SITE_KEY, { action: "contact_submit" })
+            .then(resolve)
+            .catch(() => reject(new Error("reCAPTCHA verification failed. Please try again.")));
+        });
+      });
+
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, recaptchaToken }),
       });
 
       const data = await res.json();
@@ -236,7 +251,6 @@ const ContactPage = () => {
 
               </div>
             </div>
-
           </div>
         </div>
       </section>

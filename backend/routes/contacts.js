@@ -13,6 +13,7 @@ const contactSchema = z.object({
     phone: z.string().min(10, "Phone must be at least 10 digits").max(20),
     service: z.string().max(100).optional(),
     message: z.string().max(1000, "Message cannot exceed 1000 characters").optional(),
+    recaptchaToken: z.string().min(1, "reCAPTCHA verification is required."),
 });
 
 router.post("/", async (req, res) => {
@@ -31,14 +32,18 @@ router.post("/", async (req, res) => {
 
         const { name, email, phone, service, message } = result.data;
 
-        // ── 2. Sanitize message field ────────────────────────────────────────────
+        // ── 2. Read reCAPTCHA flags from middleware ──────────────────────────────
+        const isSuspicious = req.isSuspicious || false;
+        const recaptchaScore = req.recaptchaScore ?? null;
+
+        // ── 3. Sanitize message field ────────────────────────────────────────────
         // Strips all HTML tags from the message to prevent XSS if content
         // is ever rendered in an email client or admin dashboard.
         const sanitizedMessage = message
             ? sanitizeHtml(message, { allowedTags: [], allowedAttributes: {} })
             : undefined;
 
-        // ── 3. Duplicate submission protection ───────────────────────────────────
+        // ── 4. Duplicate submission protection ───────────────────────────────────
         // Reject if the same email has submitted a form within the last 5 minutes.
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
@@ -57,7 +62,7 @@ router.post("/", async (req, res) => {
             });
         }
 
-        // ── 4. Save submission to Supabase ───────────────────────────────────────
+        // ── 5. Save submission to Supabase ───────────────────────────────────────
         const { data: submission, error: dbError } = await supabase
             .from("contact_submissions")
             .insert({ name, email, phone, service, message: sanitizedMessage })
@@ -72,13 +77,15 @@ router.post("/", async (req, res) => {
             });
         }
 
-        // ── 5. Send emails + log results ─────────────────────────────────────────
+        // ── 6. Send emails + log results ─────────────────────────────────────────
         const emailResults = await sendContactEmail({
             name,
             email,
             phone,
             service,
             message: sanitizedMessage,
+            isSuspicious,
+            recaptchaScore,
         });
 
         const logs = emailResults.map((result) => ({
@@ -95,7 +102,7 @@ router.post("/", async (req, res) => {
             console.error("Supabase email log error:", logError);
         }
 
-        // ── 6. Check if owner email succeeded ────────────────────────────────────
+        // ── 7. Check if owner email succeeded ────────────────────────────────────
         const ownerResult = emailResults.find((r) => r.type === "owner");
         if (ownerResult?.status === "failed") {
             return res.status(500).json({
@@ -110,7 +117,7 @@ router.post("/", async (req, res) => {
         });
 
     } catch (err) {
-        // ── 7. Catch unexpected errors ────────────────────────────────────────────
+        // ── 8. Catch unexpected errors ────────────────────────────────────────────
         console.error("Contact route error:", err);
         return res.status(500).json({
             success: false,

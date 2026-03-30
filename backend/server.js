@@ -8,6 +8,7 @@ import timeout from "connect-timeout";
 import { clerkMiddleware } from "@clerk/express";
 import contactRoute from "./routes/contacts.js";
 import adminRoute from "./routes/admin.js";
+import verifyCaptcha from "./middleware/verifyCaptcha.js";
 
 dotenv.config();
 
@@ -66,7 +67,7 @@ const contactLimiter = rateLimit({
 });
 
 // ── 10. Routes ─────────────────────────────────────────────────────────────
-app.use("/api/contact", contactLimiter, haltOnTimeout, contactRoute);
+app.use("/api/contact", verifyCaptcha, contactLimiter, haltOnTimeout, contactRoute);
 app.use("/api/admin", haltOnTimeout, adminRoute);
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));

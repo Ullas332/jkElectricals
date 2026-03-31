@@ -47,7 +47,11 @@ app.use(morgan("combined"));
 
 // ── 6. CORS ────────────────────────────────────────────────────────────────
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:8081",
+    origin: [
+        process.env.FRONTEND_URL || "http://localhost:8081",
+        "https://jkelectricalsmysore.com",
+        "https://www.jkelectricalsmysore.com",
+    ],
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true,
 }));
@@ -56,9 +60,8 @@ app.use(cors({
 app.use(express.json({ limit: "10kb" }));
 app.use(haltOnTimeout);
 
-// ── 8. Clerk middleware ────────────────────────────────────────────────────
-app.use(clerkMiddleware());
-app.use(haltOnTimeout);
+// ── 8. Global Clerk middleware removed ───────────────────────────────────────
+// Applied only to protected routes below to avoid redirect loops on public endpoints.
 
 // ── 9. Rate limiting — contact form only ──────────────────────────────────
 const contactLimiter = rateLimit({
@@ -75,7 +78,7 @@ const contactLimiter = rateLimit({
 
 // ── 10. Routes ─────────────────────────────────────────────────────────────
 app.use("/api/contact", verifyCaptcha, contactLimiter, haltOnTimeout, contactRoute);
-app.use("/api/admin", haltOnTimeout, adminRoute);
+app.use("/api/admin", clerkMiddleware(), haltOnTimeout, adminRoute);
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 

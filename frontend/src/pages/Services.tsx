@@ -56,21 +56,48 @@ const WhatsAppIcon = () => (
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Scroll reveal hook
+// Scroll-aware stagger reveal hook
 // ─────────────────────────────────────────────────────────────────────────────
-// Page-load stagger: reveals children shortly after mount
-const useMountReveal = () => {
+// Uses IntersectionObserver on each card individually.
+// Initial batch of visible cards staggers at 120ms intervals;
+// cards that scroll into view later animate immediately.
+const useStaggerReveal = () => {
   const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const t = setTimeout(() => {
-      el.querySelectorAll(".stagger-child").forEach((child) => {
-        (child as HTMLElement).classList.add("revealed");
-      });
-    }, 120);
-    return () => clearTimeout(t);
+
+    const children = Array.from(el.querySelectorAll(".stagger-child"));
+    let batchIndex = 0;
+    let batchTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting);
+        visible.forEach((entry, i) => {
+          const delay = (batchIndex + i) * 120;
+          setTimeout(() => {
+            (entry.target as HTMLElement).classList.add("revealed");
+          }, delay);
+          observer.unobserve(entry.target);
+        });
+        batchIndex += visible.length;
+
+        // Reset batch index after a pause so scroll-revealed cards
+        // don't accumulate ever-growing delays
+        if (batchTimer) clearTimeout(batchTimer);
+        batchTimer = setTimeout(() => {
+          batchIndex = 0;
+        }, 500);
+      },
+      { threshold: 0.08 },
+    );
+
+    children.forEach((child) => observer.observe(child));
+    return () => observer.disconnect();
   }, []);
+
   return ref;
 };
 
@@ -469,7 +496,7 @@ const industrialServices = [
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
 const ServicesPage = () => {
-  const listRef = useMountReveal();
+  const listRef = useStaggerReveal();
 
   useEffect(() => {
     if (window.location.hash) {
@@ -484,15 +511,28 @@ const ServicesPage = () => {
     <div className="bg-white">
       <style>{`
         /* ── Card stagger ── */
-        .stagger-child { opacity: 0; transform: translateY(28px); transition: opacity 0.65s cubic-bezier(0.2,0.8,0.2,1), transform 0.65s cubic-bezier(0.2,0.8,0.2,1); }
-        .stagger-child.revealed { opacity: 1; transform: translateY(0); }
-        .stagger-child:nth-child(1) { transition-delay: 0.04s }
-        .stagger-child:nth-child(2) { transition-delay: 0.12s }
-        .stagger-child:nth-child(3) { transition-delay: 0.20s }
-        .stagger-child:nth-child(4) { transition-delay: 0.28s }
-        .stagger-child:nth-child(5) { transition-delay: 0.36s }
-        .stagger-child:nth-child(6) { transition-delay: 0.44s }
-        .stagger-child:nth-child(n+7) { transition-delay: 0.52s }
+        .stagger-child {
+          opacity: 0;
+          transform: translateY(32px) scale(0.97);
+          transition: opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+                      transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .stagger-child.revealed {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+        /* ── Hero entrance ── */
+        @keyframes heroFadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .hero-animate {
+          opacity: 0;
+          animation: heroFadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        .hero-animate-1 { animation-delay: 0s; }
+        .hero-animate-2 { animation-delay: 0.12s; }
+        .hero-animate-3 { animation-delay: 0.24s; }
       `}</style>
 
       {/* ── Hero ── */}
@@ -559,13 +599,13 @@ const HeroSection = () => (
     <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.035]"
       style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
     <div className="container-max relative z-10">
-      <p className="text-[#00B4D8] font-bold text-sm uppercase tracking-widest mb-4">
+      <p className="hero-animate hero-animate-1 text-[#00B4D8] font-bold text-sm uppercase tracking-widest mb-4">
         Industrial &amp; Commercial
       </p>
-      <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold drop-shadow-sm">
+      <h1 className="hero-animate hero-animate-2 font-display text-4xl md:text-5xl lg:text-6xl font-extrabold drop-shadow-sm">
         Our Engineering Services
       </h1>
-      <p className="mt-5 text-white/85 text-lg md:text-xl max-w-3xl mx-auto font-medium">
+      <p className="hero-animate hero-animate-3 mt-5 text-white/85 text-lg md:text-xl max-w-3xl mx-auto font-medium">
         Providing high-tension installations, substation commissioning, and industrial electrical solutions engineered for reliability.
       </p>
     </div>

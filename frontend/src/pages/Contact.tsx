@@ -1,6 +1,39 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Phone, Mail, MapPin, Clock, Send, Loader2 } from "lucide-react";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Scroll-aware stagger reveal hook
+// ─────────────────────────────────────────────────────────────────────────────
+const useStaggerReveal = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const children = Array.from(el.querySelectorAll(".stagger-child"));
+    let batchIndex = 0;
+    let batchTimer: ReturnType<typeof setTimeout> | null = null;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting);
+        visible.forEach((entry, i) => {
+          const delay = (batchIndex + i) * 120;
+          setTimeout(() => {
+            (entry.target as HTMLElement).classList.add("revealed");
+          }, delay);
+          observer.unobserve(entry.target);
+        });
+        batchIndex += visible.length;
+        if (batchTimer) clearTimeout(batchTimer);
+        batchTimer = setTimeout(() => { batchIndex = 0; }, 500);
+      },
+      { threshold: 0.08 },
+    );
+    children.forEach((child) => observer.observe(child));
+    return () => observer.disconnect();
+  }, []);
+  return ref;
+};
 
 const ContactPage = () => {
   const [searchParams] = useSearchParams();
@@ -9,6 +42,7 @@ const ContactPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const contentRef = useStaggerReveal();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +83,30 @@ const ContactPage = () => {
 
   return (
     <div>
+      <style>{`
+        .stagger-child {
+          opacity: 0;
+          transform: translateY(32px) scale(0.97);
+          transition: opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+                      transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .stagger-child.revealed {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+        /* ── Hero entrance ── */
+        @keyframes heroFadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .hero-animate {
+          opacity: 0;
+          animation: heroFadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        .hero-animate-1 { animation-delay: 0s; }
+        .hero-animate-2 { animation-delay: 0.12s; }
+        .hero-animate-3 { animation-delay: 0.24s; }
+      `}</style>
       {/* Hero Header */}
       <section className="bg-[#0A3A5C] text-white py-20 md:py-28 text-center px-4 relative overflow-hidden">
         {/* Decorative gradient blobs */}
@@ -58,13 +116,13 @@ const ContactPage = () => {
         </div>
 
         <div className="container-max relative z-10">
-          <p className="text-[#00B4D8] font-bold text-sm uppercase tracking-widest mb-4">
+          <p className="hero-animate hero-animate-1 text-[#00B4D8] font-bold text-sm uppercase tracking-widest mb-4">
             Get In Touch
           </p>
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold drop-shadow-sm">
+          <h1 className="hero-animate hero-animate-2 font-display text-4xl md:text-5xl lg:text-6xl font-extrabold drop-shadow-sm">
             Contact JK Electricals
           </h1>
-          <p className="mt-5 text-white/90 text-lg md:text-xl max-w-2xl mx-auto font-medium">
+          <p className="hero-animate hero-animate-3 mt-5 text-white/90 text-lg md:text-xl max-w-2xl mx-auto font-medium">
             Ready to discuss your industrial electrification or infrastructure project? Reach out to our engineering team today.
           </p>
         </div>
@@ -72,10 +130,10 @@ const ContactPage = () => {
 
       <section className="section-padding bg-slate-50">
         <div className="container-max">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          <div ref={contentRef} className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
 
             {/* Left Column: Contact Form Card */}
-            <div className="bg-white shadow-xl rounded-2xl p-8 border border-slate-100 relative overflow-hidden">
+            <div className="stagger-child bg-white shadow-xl rounded-2xl p-8 border border-slate-100 relative overflow-hidden">
               {/* Subtle top border accent */}
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00B4D8] to-[#0A3A5C]"></div>
 
@@ -197,7 +255,7 @@ const ContactPage = () => {
 
             {/* Right Column: Contact Info (No Card) */}
             {/* Added pt-8 to perfectly align the headings horizontally */}
-            <div className="pt-8 lg:pl-8 flex flex-col h-full">
+            <div className="stagger-child pt-8 lg:pl-8 flex flex-col h-full">
 
               <div className="mb-8">
                 <h3 className="font-display text-2xl font-bold text-slate-800 mb-2">Direct Contact</h3>

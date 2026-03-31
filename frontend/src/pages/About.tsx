@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { CheckCircle, ArrowRight, ShieldCheck, Phone, Award, Users, Zap, HardHat, Wrench, Plug, UserRound, GraduationCap } from "lucide-react";
 import proprietorPhoto from "@/assets/jkprop.jpg";
 
@@ -16,8 +16,49 @@ const WhatsAppIcon = () => (
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Scroll reveal hook
+// Scroll-aware stagger reveal hook
 // ─────────────────────────────────────────────────────────────────────────────
+// Observes each .stagger-child individually.
+// Initial batch staggers at 120ms; later scroll-revealed cards animate immediately.
+const useStaggerReveal = () => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const children = Array.from(el.querySelectorAll(".stagger-child"));
+    let batchIndex = 0;
+    let batchTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting);
+        visible.forEach((entry, i) => {
+          const delay = (batchIndex + i) * 120;
+          setTimeout(() => {
+            (entry.target as HTMLElement).classList.add("revealed");
+          }, delay);
+          observer.unobserve(entry.target);
+        });
+        batchIndex += visible.length;
+
+        if (batchTimer) clearTimeout(batchTimer);
+        batchTimer = setTimeout(() => {
+          batchIndex = 0;
+        }, 500);
+      },
+      { threshold: 0.08 },
+    );
+
+    children.forEach((child) => observer.observe(child));
+    return () => observer.disconnect();
+  }, []);
+
+  return ref;
+};
+
+// Simple single-element reveal (for whole sections like story / credentials)
 const useReveal = () => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -60,12 +101,37 @@ const AboutPage = () => {
   const scopeRef = useReveal();
   const msgRef = useReveal();
   const licenseRef = useReveal();
+  const teamRef = useStaggerReveal();
+  const toolsRef = useStaggerReveal();
+  const credsRef = useStaggerReveal();
 
   return (
     <div className="bg-white">
       <style>{`
         .reveal-section { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.2,0.8,0.2,1), transform 0.7s cubic-bezier(0.2,0.8,0.2,1); }
         .reveal-section.revealed { opacity: 1; transform: translateY(0); }
+        .stagger-child {
+          opacity: 0;
+          transform: translateY(32px) scale(0.97);
+          transition: opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+                      transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .stagger-child.revealed {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+        /* ── Hero entrance ── */
+        @keyframes heroFadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .hero-animate {
+          opacity: 0;
+          animation: heroFadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        .hero-animate-1 { animation-delay: 0s; }
+        .hero-animate-2 { animation-delay: 0.12s; }
+        .hero-animate-3 { animation-delay: 0.24s; }
       `}</style>
 
       {/* ── Hero ── */}
@@ -77,9 +143,9 @@ const AboutPage = () => {
         <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03]"
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
         <div className="container-max relative z-10">
-          <p className="text-[#00B4D8] font-bold text-sm uppercase tracking-widest mb-4">Who We Are</p>
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold">About JK Electricals</h1>
-          <p className="mt-5 text-white/85 text-lg md:text-xl max-w-2xl mx-auto font-medium">
+          <p className="hero-animate hero-animate-1 text-[#00B4D8] font-bold text-sm uppercase tracking-widest mb-4">Who We Are</p>
+          <h1 className="hero-animate hero-animate-2 font-display text-4xl md:text-5xl lg:text-6xl font-extrabold">About JK Electricals</h1>
+          <p className="hero-animate hero-animate-3 mt-5 text-white/85 text-lg md:text-xl max-w-2xl mx-auto font-medium">
             A licensed Super Grade Electrical Contractor delivering reliable power infrastructure and industrial electrification since 2004.
           </p>
         </div>
@@ -162,7 +228,7 @@ const AboutPage = () => {
             A skilled, multi-disciplinary workforce capable of handling complex electrical projects from conception to commissioning.
           </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div ref={teamRef} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {[
               { role: "Electrical Engineers", count: "5+", Icon: Zap, desc: "Licensed" },
               { role: "Diploma Engineers", count: "18+", Icon: GraduationCap, desc: "Supervision" },
@@ -170,7 +236,7 @@ const AboutPage = () => {
               { role: "Electricians", count: "30+", Icon: Plug, desc: "Field Work" },
               { role: "Helpers", count: "30+", Icon: HardHat, desc: "Support" },
             ].map(({ role, count, Icon, desc }) => (
-              <div key={role} className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col items-center text-center shadow-sm hover:shadow-lg hover:scale-[1.03] hover:border-[#00B4D8]/30 transition-all duration-300 group">
+              <div key={role} className="stagger-child bg-white border border-slate-200 rounded-2xl p-6 flex flex-col items-center text-center shadow-sm hover:shadow-lg hover:scale-[1.03] hover:border-[#00B4D8]/30 transition-all duration-300 group">
                 <div className="bg-slate-100 group-hover:bg-[#00B4D8]/10 p-3 rounded-xl mb-4 transition-colors duration-300">
                   <Icon className="h-5 w-5 text-[#0A3A5C] group-hover:text-[#00B4D8] transition-colors duration-300" strokeWidth={2} />
                 </div>
@@ -201,7 +267,7 @@ const AboutPage = () => {
             Equipped with modern tools and testing instruments to handle complex electrical installations safely and efficiently — from cable laying to high-voltage testing.
           </p>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div ref={toolsRef} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
               {
                 icon: Zap,
@@ -234,7 +300,7 @@ const AboutPage = () => {
                 items: ["Spanner Set (Ring & Screw)", "Torque Wrench Spanner", "Cutting Pliers & Wire Gauge", "Crimping Tool (up to 400 sq.mm)"],
               },
             ].map(({ icon: Icon, title, items }) => (
-              <div key={title} className="bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
+              <div key={title} className="stagger-child bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:bg-white hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="bg-[#0A3A5C]/10 p-2.5 rounded-xl group-hover:bg-[#00B4D8]/15 transition-colors">
                     <Icon className="h-5 w-5 text-[#0A3A5C] group-hover:text-[#00B4D8] transition-colors" />
@@ -262,9 +328,9 @@ const AboutPage = () => {
             <p className="text-[#00B4D8] font-bold text-sm uppercase tracking-widest mb-3 text-center">Verified & Certified</p>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-800 mb-10 text-center">Certifications & Credentials</h2>
 
-            <div className="grid md:grid-cols-2 gap-8 lg:gap-10 items-stretch">
+            <div ref={credsRef} className="grid md:grid-cols-2 gap-8 lg:gap-10 items-stretch">
               {/* Card 1: License Details */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col hover:shadow-lg transition-all duration-300">
+              <div className="stagger-child bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center gap-4 mb-8">
                   <div className="bg-[#0A3A5C]/10 p-3.5 rounded-2xl">
                     <ShieldCheck className="h-8 w-8 text-[#0A3A5C]" />
@@ -291,7 +357,7 @@ const AboutPage = () => {
               </div>
 
               {/* Card 2: Why Partner With Us? */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col hover:shadow-lg transition-all duration-300">
+              <div className="stagger-child bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center gap-4 mb-8">
                   <div className="bg-[#00B4D8]/10 p-3.5 rounded-2xl">
                     <Award className="h-8 w-8 text-[#00B4D8]" />

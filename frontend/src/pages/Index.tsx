@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   Shield, Clock, Star, Phone, ArrowRight, Award, Users,
@@ -197,6 +197,19 @@ const HomePage = () => {
   const statsRef = useScrollReveal();
   const industriesRef = useScrollReveal();
 
+  // Hero card stagger on mount
+  const heroGridRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = heroGridRef.current;
+    if (!el) return;
+    const cards = el.querySelectorAll(".hero-card");
+    cards.forEach((card, i) => {
+      setTimeout(() => {
+        (card as HTMLElement).classList.add("revealed");
+      }, 150 + i * 150);
+    });
+  }, []);
+
   const galleryHeaderRef = useScrollReveal();
   const galleryCarouselRef = useScrollReveal();
 
@@ -241,10 +254,10 @@ const HomePage = () => {
         <div className="absolute top-0 right-0 w-full h-[500px] bg-gradient-to-b from-slate-200/40 to-transparent pointer-events-none" />
 
         <div className="container-max px-4 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-6">
+          <div ref={heroGridRef} className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-6">
 
             {/* Introduction Partition */}
-            <div className="md:col-span-12 lg:col-span-6 bg-white rounded-[2rem] p-8 lg:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 flex flex-col justify-center relative overflow-hidden group">
+            <div className="hero-card md:col-span-12 lg:col-span-6 bg-white rounded-[2rem] p-8 lg:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 flex flex-col justify-center relative overflow-hidden group">
               <div className="relative z-10">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 text-[#00B4D8] text-[11px] sm:text-xs font-bold uppercase tracking-[0.15em] w-fit mb-6 sm:mb-8 border border-sky-100">
                   Super Grade Electrical Contractor
@@ -260,7 +273,7 @@ const HomePage = () => {
             </div>
 
             {/* Photos Partition */}
-            <div className="md:col-span-12 lg:col-span-6 rounded-[2rem] overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.06)] relative min-h-[400px] lg:min-h-[450px] border border-slate-200/60">
+            <div className="hero-card md:col-span-12 lg:col-span-6 rounded-[2rem] overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.06)] relative min-h-[400px] lg:min-h-[450px] border border-slate-200/60">
               {heroSlides.map((slide, i) => (
                 <div
                   key={i}
@@ -274,7 +287,7 @@ const HomePage = () => {
             </div>
 
             {/* Who We Are Partition */}
-            <div className="md:col-span-12 lg:col-span-6 bg-white rounded-[2rem] p-8 lg:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 flex flex-col justify-center relative overflow-hidden group">
+            <div className="hero-card md:col-span-12 lg:col-span-6 bg-white rounded-[2rem] p-8 lg:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 flex flex-col justify-center relative overflow-hidden group">
               <div className="relative z-10">
                 <p className="text-[#00B4D8] font-bold text-[1.8rem] lg:text-[2.1rem] leading-tight drop-shadow-sm mb-4">Who We Are</p>
                 <h3 className="font-display text-3xl md:text-3xl lg:text-4xl font-extrabold text-slate-800 leading-[1.2] mb-5 tracking-tight">
@@ -290,7 +303,7 @@ const HomePage = () => {
             </div>
 
             {/* Contacts Partition */}
-            <div className="md:col-span-12 lg:col-span-6 bg-[#0A3A5C] rounded-[2rem] p-8 lg:p-12 shadow-[0_8px_32px_rgba(10,58,92,0.15)] flex flex-col justify-center relative overflow-hidden border border-[#0A3A5C]">
+            <div className="hero-card md:col-span-12 lg:col-span-6 bg-[#0A3A5C] rounded-[2rem] p-8 lg:p-12 shadow-[0_8px_32px_rgba(10,58,92,0.15)] flex flex-col justify-center relative overflow-hidden border border-[#0A3A5C]">
               <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#00B4D8] rounded-full blur-[100px] opacity-20 pointer-events-none" />
               <div className="absolute -left-10 -top-10 opacity-[0.03] pointer-events-none">
                 <Phone className="w-64 h-64 text-white" />

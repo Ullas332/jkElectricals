@@ -175,4 +175,28 @@
   .animate-fade-in {
     animation: fade-in 0.5s ease-out forwards;
   }
+
+  /* ── Scroll-triggered card reveal ── */
+  .scroll-card {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.7s cubic-bezier(0.25, 1, 0.5, 1),
+                transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .scroll-card.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Hero partition variant — slightly different feel */
+  .hero-card {
+    opacity: 0;
+    transform: translateY(32px) scale(0.97);
+    transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1),
+                transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .hero-card.revealed {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

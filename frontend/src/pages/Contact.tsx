@@ -226,7 +226,7 @@ const ContactPage = () => {
                   </div>
                 </a>
 
-                <a href="https://maps.google.com/?q=212,+KIADB+Housing+Layout,+Hebbal+2nd+Stage,+Mysore" target="_blank" rel="noopener noreferrer" className="flex items-start gap-5 group">
+                <a href="https://maps.google.com/maps?q=JK+Electricals,+KIADB+Housing+Layout,+Hebbal+2nd+Stage,+Mysuru,+Karnataka+570017" target="_blank" rel="noopener noreferrer" className="flex items-start gap-5 group">
                   <div className="bg-sky-50 border border-sky-100 text-[#00B4D8] p-3.5 rounded-full shrink-0 mt-1 transition-colors group-hover:bg-[#00B4D8] group-hover:text-white">
                     <MapPin className="h-6 w-6" />
                   </div>

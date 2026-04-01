@@ -51,7 +51,7 @@ const App = () => (
             <Route path="/gallery" element={<Layout><Gallery /></Layout>} />
 
             {/* ── Admin — no Layout (no navbar/footer) ── */}
-            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin-portal-access" element={<AdminLogin />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/submissions/:id" element={<ProtectedRoute><SubmissionDetail /></ProtectedRoute>} />
 

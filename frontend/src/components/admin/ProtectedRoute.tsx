@@ -1,8 +1,9 @@
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { isLoaded, isSignedIn } = useAuth();
+    const { user } = useUser();
 
     if (!isLoaded) {
         return (
@@ -15,7 +16,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         );
     }
 
-    if (!isSignedIn) return <Navigate to="/admin/login" replace />;
+    if (!isSignedIn) return <Navigate to="/" replace />; // Redirect non-logged in users to home
+
+    // Admin email validation
+    const allowedEmails = (import.meta.env.VITE_ADMIN_EMAILS || "")
+        .split(",")
+        .map((e: string) => e.trim().toLowerCase());
+
+    const userEmail = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase();
+
+    if (!userEmail || !allowedEmails.includes(userEmail)) {
+        // Rediect logged-in but unauthorized users to home
+        return <Navigate to="/" replace />;
+    }
 
     return <>{children}</>;
 };

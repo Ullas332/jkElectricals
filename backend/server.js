@@ -46,15 +46,19 @@ app.use(helmet({
 app.use(morgan("combined"));
 
 // ── 6. CORS ────────────────────────────────────────────────────────────────
-app.use(cors({
+const corsOptions = {
     origin: [
         process.env.FRONTEND_URL || "http://localhost:8081",
         "https://jkelectricalsmysore.com",
         "https://www.jkelectricalsmysore.com",
     ],
-    methods: ["GET", "POST", "PATCH", "DELETE"],
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
-}));
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Handle preflight for all routes
 
 // ── 7. Body size limit ─────────────────────────────────────────────────────
 app.use(express.json({ limit: "10kb" }));

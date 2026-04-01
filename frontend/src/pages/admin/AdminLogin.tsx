@@ -140,14 +140,10 @@ const AdminLogin = () => {
                             dividerLine: { backgroundColor: "#e2e8f0" },
                             dividerText: { color: "#94a3b8", fontSize: "12px" },
 
-                            // Footer links
-                            footerActionLink: {
-                                color: "#0ea5e9",
-                                fontWeight: "600",
-                            },
-                            footerActionText: {
-                                color: "#64748b",
-                            },
+                            // Footer links (Hide Sign Up)
+                            footerAction: { display: "none" },
+                            footerActionLink: { display: "none" },
+                            footerActionText: { display: "none" },
 
                             // Identity preview
                             identityPreviewText: { color: "#334155" },

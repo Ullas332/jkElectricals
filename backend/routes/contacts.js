@@ -9,8 +9,15 @@ const router = express.Router();
 // ── Validation schema ──────────────────────────────────────────────────────
 const contactSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters").max(100),
-    email: z.string().email("Invalid email address"),
-    phone: z.string().min(10, "Phone must be at least 10 digits").max(20),
+    email: z
+        .string()
+        .email("Please enter a valid email address (e.g. name@example.com)"),
+    phone: z
+        .string()
+        .regex(
+            /^\+91\s?\d{10}$/,
+            "Phone number must be exactly 10 digits (e.g. +91 9876543210)"
+        ),
     service: z.string().max(100).optional(),
     message: z.string().max(1000, "Message cannot exceed 1000 characters").optional(),
     recaptchaToken: z.string().min(1, "reCAPTCHA verification is required."),

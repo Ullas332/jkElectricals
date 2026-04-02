@@ -1,6 +1,23 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Phone, Mail, MapPin, Clock, Send, Loader2 } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, Send, Loader2, ChevronDown, Search } from "lucide-react";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Karnataka cities list
+// ─────────────────────────────────────────────────────────────────────────────
+const KARNATAKA_CITIES = [
+  "Mysuru", "Bengaluru", "Hubballi", "Dharwad", "Mangaluru", "Belagavi",
+  "Kalaburagi", "Davanagere", "Ballari", "Vijayapura", "Shivamogga",
+  "Tumakuru", "Raichur", "Bidar", "Hassan", "Udupi", "Chikkamagaluru",
+  "Chitradurga", "Kolar", "Mandya", "Bagalkot", "Gadag", "Haveri",
+  "Koppal", "Yadgir", "Chamarajanagar", "Kodagu", "Chikkaballapur",
+  "Ramnagara", "Dakshina Kannada", "Uttara Kannada", "Shimoga",
+  "Robertsonpet", "Hospet", "Bhadravati", "Ranebennur", "Gangavati",
+  "Sindagi", "Gokak", "Ilkal", "Indi", "Jevargi", "Muddebihal",
+  "Mudgal", "Mulbagal", "Mudhol", "Nanjangud", "Pavagada", "Sagara",
+  "Sira", "Srinivaspur", "Tarikere", "Tiptur", "Honnavar", "Karwar",
+  "Sirsi", "Ankola", "Kumta", "Bhatkal", "Dandeli", "Yellapur",
+].sort();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Scroll-aware stagger reveal hook
@@ -35,22 +52,148 @@ const useStaggerReveal = () => {
   return ref;
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// City Dropdown with Search
+// ─────────────────────────────────────────────────────────────────────────────
+const CityDropdown = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (city: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const filtered = KARNATAKA_CITIES.filter((c) =>
+    c.toLowerCase().includes(search.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setSearch("");
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => { setOpen((o) => !o); setSearch(""); }}
+        className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00B4D8]/50 focus:border-[#00B4D8] focus:bg-white transition-all flex items-center justify-between"
+      >
+        <span className={value ? "text-slate-800" : "text-slate-400"}>
+          {value || "Select city in Karnataka"}
+        </span>
+        <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100">
+            <Search className="h-4 w-4 text-slate-400 shrink-0" />
+            <input
+              autoFocus
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search city..."
+              className="flex-1 text-sm text-slate-800 outline-none bg-transparent placeholder:text-slate-400"
+            />
+          </div>
+          <ul className="max-h-52 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <li className="px-4 py-3 text-sm text-slate-400">No cities found</li>
+            ) : (
+              filtered.map((city) => (
+                <li
+                  key={city}
+                  onClick={() => { onChange(city); setOpen(false); setSearch(""); }}
+                  className={`px-4 py-2.5 text-sm cursor-pointer hover:bg-sky-50 hover:text-[#00B4D8] transition-colors ${
+                    value === city ? "bg-sky-50 text-[#00B4D8] font-semibold" : "text-slate-700"
+                  }`}
+                >
+                  {city}
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+const isValidEmail = (email: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+
+const getPhoneDigits = (phone: string) =>
+  phone.replace(/^\+91\s?/, "").replace(/\D/g, "");
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Component
+// ─────────────────────────────────────────────────────────────────────────────
 const ContactPage = () => {
   const [searchParams] = useSearchParams();
   const prefilledService = searchParams.get("service") || "";
-  const [form, setForm] = useState({ name: "", email: "", phone: "+91 ", service: prefilledService, message: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "+91 ",
+    service: prefilledService,
+    city: "",
+    message: "",
+  });
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; phone?: string }>({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const contentRef = useStaggerReveal();
 
+  const validateField = (name: string, value: string) => {
+    const errs = { ...fieldErrors };
+    if (name === "email") {
+      errs.email =
+        value && !isValidEmail(value)
+          ? "Please enter a valid email address (e.g. name@example.com)"
+          : undefined;
+    }
+    if (name === "phone") {
+      const digits = getPhoneDigits(value);
+      errs.phone =
+        value.replace("+91 ", "") && digits.length !== 10
+          ? "Phone number must be exactly 10 digits"
+          : undefined;
+    }
+    setFieldErrors(errs);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isValidEmail(form.email)) {
+      setFieldErrors((prev) => ({ ...prev, email: "Please enter a valid email address (e.g. name@example.com)" }));
+      return;
+    }
+    const digits = getPhoneDigits(form.phone);
+    if (digits.length !== 10) {
+      setFieldErrors((prev) => ({ ...prev, phone: "Phone number must be exactly 10 digits" }));
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     try {
-      // Get reCAPTCHA v3 token
       const recaptchaToken = await new Promise<string>((resolve, reject) => {
         const grecaptcha = (window as any).grecaptcha;
         if (!grecaptcha) {
@@ -65,10 +208,14 @@ const ContactPage = () => {
         });
       });
 
+      const messageWithCity = form.city
+        ? `City: ${form.city}, Karnataka\n\n${form.message}`
+        : form.message;
+
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, recaptchaToken }),
+        body: JSON.stringify({ ...form, message: messageWithCity, recaptchaToken }),
       });
 
       const data = await res.json();
@@ -94,7 +241,6 @@ const ContactPage = () => {
           opacity: 1;
           transform: translateY(0) scale(1);
         }
-        /* ── Hero entrance ── */
         @keyframes heroFadeUp {
           from { opacity: 0; transform: translateY(24px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -106,15 +252,15 @@ const ContactPage = () => {
         .hero-animate-1 { animation-delay: 0s; }
         .hero-animate-2 { animation-delay: 0.12s; }
         .hero-animate-3 { animation-delay: 0.24s; }
+        .field-error { color: #dc2626; font-size: 0.78rem; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
       `}</style>
+
       {/* Hero Header */}
       <section className="bg-[#0A3A5C] text-white py-20 md:py-28 text-center px-4 relative overflow-hidden">
-        {/* Decorative gradient blobs */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
           <div className="absolute -top-[30%] -right-[10%] w-[60%] h-[120%] rounded-full bg-gradient-to-bl from-[#00B4D8]/20 to-transparent blur-3xl" />
           <div className="absolute -bottom-[30%] -left-[10%] w-[60%] h-[120%] rounded-full bg-gradient-to-tr from-[#00B4D8]/20 to-transparent blur-3xl" />
         </div>
-
         <div className="container-max relative z-10">
           <p className="hero-animate hero-animate-1 text-[#00B4D8] font-bold text-sm uppercase tracking-widest mb-4">
             Get In Touch
@@ -134,7 +280,6 @@ const ContactPage = () => {
 
             {/* Left Column: Contact Form Card */}
             <div className="stagger-child bg-white shadow-xl rounded-2xl p-8 border border-slate-100 relative overflow-hidden">
-              {/* Subtle top border accent */}
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00B4D8] to-[#0A3A5C]"></div>
 
               {submitted ? (
@@ -159,13 +304,14 @@ const ContactPage = () => {
                     </div>
                   )}
 
+                  {/* Row 1: Name + Email */}
                   <div className="grid sm:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
                       <label htmlFor="name" className="text-sm font-semibold text-slate-700">Full Name <span className="text-sky-500">*</span></label>
                       <input
                         id="name"
                         type="text"
-                        placeholder="e.g. John Doe"
+                        placeholder="Your name"
                         required
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -177,14 +323,27 @@ const ContactPage = () => {
                       <input
                         id="email"
                         type="email"
-                        placeholder="e.g. john@example.com"
+                        placeholder="Your email"
                         required
                         value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00B4D8]/50 focus:border-[#00B4D8] focus:bg-white transition-all"
+                        onChange={(e) => {
+                          setForm({ ...form, email: e.target.value });
+                          validateField("email", e.target.value);
+                        }}
+                        onBlur={(e) => validateField("email", e.target.value)}
+                        className={`w-full px-4 py-3 rounded-lg border bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:bg-white transition-all ${
+                          fieldErrors.email
+                            ? "border-red-400 focus:border-red-400 focus:ring-red-200"
+                            : "border-slate-200 focus:border-[#00B4D8] focus:ring-[#00B4D8]/50"
+                        }`}
                       />
+                      {fieldErrors.email && (
+                        <p className="field-error">⚠️ {fieldErrors.email}</p>
+                      )}
                     </div>
                   </div>
+
+                  {/* Row 2: Phone + Service */}
                   <div className="grid sm:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
                       <label htmlFor="phone" className="text-sm font-semibold text-slate-700">Phone Number <span className="text-sky-500">*</span></label>
@@ -196,16 +355,27 @@ const ContactPage = () => {
                         value={form.phone}
                         onChange={(e) => {
                           const val = e.target.value;
+                          let updated: string;
                           if (val.startsWith("+91 ")) {
-                            setForm({ ...form, phone: val });
+                            updated = val;
                           } else if (val === "+91" || val.length < 4) {
-                            setForm({ ...form, phone: "+91 " });
+                            updated = "+91 ";
                           } else {
-                            setForm({ ...form, phone: "+91 " + val.replace(/^\+91\s*/, "") });
+                            updated = "+91 " + val.replace(/^\+91\s*/, "");
                           }
+                          setForm({ ...form, phone: updated });
+                          validateField("phone", updated);
                         }}
-                        className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00B4D8]/50 focus:border-[#00B4D8] focus:bg-white transition-all"
+                        onBlur={(e) => validateField("phone", e.target.value)}
+                        className={`w-full px-4 py-3 rounded-lg border bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:bg-white transition-all ${
+                          fieldErrors.phone
+                            ? "border-red-400 focus:border-red-400 focus:ring-red-200"
+                            : "border-slate-200 focus:border-[#00B4D8] focus:ring-[#00B4D8]/50"
+                        }`}
                       />
+                      {fieldErrors.phone && (
+                        <p className="field-error">⚠️ {fieldErrors.phone}</p>
+                      )}
                     </div>
                     <div className="space-y-1.5">
                       <label htmlFor="service" className="text-sm font-semibold text-slate-700">Service Required</label>
@@ -216,17 +386,30 @@ const ContactPage = () => {
                         className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00B4D8]/50 focus:border-[#00B4D8] focus:bg-white transition-all"
                       >
                         <option value="">Select a Service</option>
-                        <option>Substation & EHT Installations</option>
+                        <option>Substation &amp; EHT Installations</option>
                         <option>Transformer Services</option>
-                        <option>HT Metering & Distribution</option>
+                        <option>HT Metering &amp; Distribution</option>
                         <option>Industrial Electrification</option>
-                        <option>Control Panels & Testing</option>
-                        <option>Govt Liaison & Approvals</option>
+                        <option>Control Panels &amp; Testing</option>
+                        <option>Govt Liaison &amp; Approvals</option>
                         <option>Generator Maintenance</option>
                         <option>Other</option>
                       </select>
                     </div>
                   </div>
+
+                  {/* Row 3: City (Karnataka only) */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-slate-700">
+                      City <span className="text-slate-400 font-normal">(Karnataka)</span>
+                    </label>
+                    <CityDropdown
+                      value={form.city}
+                      onChange={(city) => setForm({ ...form, city })}
+                    />
+                  </div>
+
+                  {/* Row 4: Project Details */}
                   <div className="space-y-1.5">
                     <label htmlFor="message" className="text-sm font-semibold text-slate-700">Project Details</label>
                     <textarea
@@ -238,6 +421,7 @@ const ContactPage = () => {
                       className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00B4D8]/50 focus:border-[#00B4D8] focus:bg-white transition-all resize-none"
                     />
                   </div>
+
                   <button
                     type="submit"
                     disabled={loading}
@@ -253,10 +437,8 @@ const ContactPage = () => {
               )}
             </div>
 
-            {/* Right Column: Contact Info (No Card) */}
-            {/* Added pt-8 to perfectly align the headings horizontally */}
+            {/* Right Column: Contact Info */}
             <div className="stagger-child pt-8 lg:pl-8 flex flex-col h-full">
-
               <div className="mb-8">
                 <h3 className="font-display text-2xl font-bold text-slate-800 mb-2">Direct Contact</h3>
                 <p className="text-slate-500 text-sm">Reach out to us directly through any of the channels below.</p>
@@ -309,6 +491,7 @@ const ContactPage = () => {
 
               </div>
             </div>
+
           </div>
         </div>
       </section>

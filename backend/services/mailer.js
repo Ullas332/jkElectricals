@@ -23,7 +23,7 @@ export const sendContactEmail = async ({ name, email, phone, service, message, i
   const results = await Promise.allSettled([
     // Owner notification
     resend.emails.send({
-      from: "JK Electricals <onboarding@resend.dev>",
+      from: "JK Electricals <info@jkelectricalsmysore.com>",
       to: ownerEmail,
       reply_to: email,
       subject: ownerSubject,
@@ -72,7 +72,7 @@ export const sendContactEmail = async ({ name, email, phone, service, message, i
 
     // Customer confirmation (no suspicious info exposed)
     resend.emails.send({
-      from: "JK Electricals <onboarding@resend.dev>",
+      from: "JK Electricals <info@jkelectricalsmysore.com>",
       to: email,
       subject: "We've received your request – JK Electricals",
       html: `
@@ -115,7 +115,8 @@ export const sendContactEmail = async ({ name, email, phone, service, message, i
 };
 
 /*
-⚠️ One important note on the `from` address:
-While testing, Resend only allows sending from `onboarding@resend.dev`. Once you add and verify your own domain in Resend, change it to something like:
-  from: "JK Electricals <noreply@yourdomain.com>"
+✅ Domain verified: jkelectricalsmysore.com
+Both emails now send from: info@jkelectricalsmysore.com
+- Owner notification → OWNER_EMAIL (with reply_to set to the customer's email)
+- Customer confirmation → customer's email address
 */

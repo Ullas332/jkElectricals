@@ -11,7 +11,7 @@ const SectionHeading = ({ title, subtitle, light, className = "" }: SectionHeadi
       {title}
     </h2>
     {subtitle && (
-      <p className={`mt-4 text-lg max-w-2xl mx-auto ${light ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+      <p className={`mt-4 text-lg max-w-2xl mx-auto font-medium ${light ? "text-primary-foreground/90" : "text-slate-700"}`}>
         {subtitle}
       </p>
     )}

@@ -63,18 +63,16 @@ const CityDropdown = ({
   onChange: (city: string) => void;
 }) => {
   const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const filtered = KARNATAKA_CITIES.filter((c) =>
-    c.toLowerCase().includes(search.toLowerCase())
+    c.toLowerCase().includes(value.toLowerCase())
   );
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setOpen(false);
-        setSearch("");
       }
     };
     document.addEventListener("mousedown", handleClick);
@@ -83,38 +81,36 @@ const CityDropdown = ({
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button
-        type="button"
-        onClick={() => { setOpen((o) => !o); setSearch(""); }}
-        className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00B4D8]/50 focus:border-[#00B4D8] focus:bg-white transition-all flex items-center justify-between"
-      >
-        <span className={value ? "text-slate-800" : "text-slate-400"}>
-          {value || "Select city in Karnataka"}
-        </span>
-        <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
+      <div className="relative">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          placeholder="Enter or search city in Karnataka"
+          className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00B4D8]/50 focus:border-[#00B4D8] focus:bg-white transition-all pr-10"
+        />
+        <ChevronDown 
+          className={`absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 cursor-pointer transition-transform ${open ? "rotate-180" : ""}`} 
+          onClick={() => setOpen((o) => !o)}
+        />
+      </div>
 
       {open && (
         <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden">
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100">
-            <Search className="h-4 w-4 text-slate-400 shrink-0" />
-            <input
-              autoFocus
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search city..."
-              className="flex-1 text-sm text-slate-800 outline-none bg-transparent placeholder:text-slate-400"
-            />
-          </div>
           <ul className="max-h-52 overflow-y-auto">
             {filtered.length === 0 ? (
-              <li className="px-4 py-3 text-sm text-slate-400">No cities found</li>
+              <li className="px-4 py-3 text-sm text-slate-500 italic bg-slate-50 border-t border-b border-slate-100">
+                "{value}" will be used as your city
+              </li>
             ) : (
               filtered.map((city) => (
                 <li
                   key={city}
-                  onClick={() => { onChange(city); setOpen(false); setSearch(""); }}
+                  onClick={() => { onChange(city); setOpen(false); }}
                   className={`px-4 py-2.5 text-sm cursor-pointer hover:bg-sky-50 hover:text-[#00B4D8] transition-colors ${
                     value === city ? "bg-sky-50 text-[#00B4D8] font-semibold" : "text-slate-700"
                   }`}
@@ -122,6 +118,15 @@ const CityDropdown = ({
                   {city}
                 </li>
               ))
+            )}
+            {/* Always provide an option to explicitly close/confirm if they typed a custom city but it partly matches filtering */}
+            {value && filtered.length > 0 && !filtered.some(c => c.toLowerCase() === value.toLowerCase()) && (
+               <li
+                 onClick={() => setOpen(false)}
+                 className="px-4 py-2.5 text-sm cursor-pointer border-t border-slate-100 bg-slate-50 text-slate-600 font-semibold hover:bg-sky-50 hover:text-[#00B4D8]"
+               >
+                 Use "{value}" instead
+               </li>
             )}
           </ul>
         </div>
@@ -401,7 +406,7 @@ const ContactPage = () => {
                   {/* Row 3: City (Karnataka only) */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-700">
-                      City <span className="text-slate-400 font-normal">(Karnataka)</span>
+                      City <span className="text-[#00B4D8] ml-1 font-bold">(Karnataka State Only)</span>
                     </label>
                     <CityDropdown
                       value={form.city}

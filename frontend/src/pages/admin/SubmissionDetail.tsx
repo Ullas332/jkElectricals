@@ -23,12 +23,24 @@ const emailLogStyles: Record<string, string> = {
     sent: "bg-sky-50 text-sky-700",
 };
 
+interface Submission {
+    name: string;
+    email: string;
+    phone: string;
+    service?: string;
+    message?: string;
+    status: string;
+    created_at: string;
+    updated_at?: string;
+    email_logs?: Array<{ type: string; recipient: string; status: string }>;
+}
+
 const SubmissionDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { getToken } = useAuth();
 
-    const [submission, setSubmission] = useState<any>(null);
+    const [submission, setSubmission] = useState<Submission | null>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -42,8 +54,8 @@ const SubmissionDetail = () => {
                 const token = await getToken();
                 const res = await fetchSubmission(token!, id!);
                 setSubmission(res.data);
-            } catch (err: any) {
-                setError(err.message || "Failed to load submission.");
+            } catch (err: unknown) {
+                setError((err as Error).message || "Failed to load submission.");
             } finally {
                 setLoading(false);
             }
@@ -56,9 +68,9 @@ const SubmissionDetail = () => {
             setUpdating(true);
             const token = await getToken();
             const res = await updateStatus(token!, id!, newStatus);
-            setSubmission((prev: any) => ({ ...prev, status: res.data.status, updated_at: res.data.updated_at }));
-        } catch (err: any) {
-            setError(err.message || "Failed to update status.");
+            setSubmission((prev) => prev ? { ...prev, status: res.data.status, updated_at: res.data.updated_at } : null);
+        } catch (err: unknown) {
+            setError((err as Error).message || "Failed to update status.");
         } finally {
             setUpdating(false);
         }
@@ -70,8 +82,8 @@ const SubmissionDetail = () => {
             const token = await getToken();
             await deleteSubmission(token!, id!);
             navigate("/admin");
-        } catch (err: any) {
-            setError(err.message || "Failed to delete.");
+        } catch (err: unknown) {
+            setError((err as Error).message || "Failed to delete.");
             setDeleting(false);
         }
     };
@@ -207,7 +219,7 @@ const SubmissionDetail = () => {
                     <div className="bg-white rounded-2xl border border-slate-200 p-6">
                         <h2 className="font-semibold text-slate-700 text-sm uppercase tracking-wide mb-4">Email Logs</h2>
                         <div className="space-y-2">
-                            {submission.email_logs.map((log: any, i: number) => (
+                            {submission.email_logs.map((log, i) => (
                                 <div key={i} className="flex items-center justify-between text-sm py-2 border-b border-slate-50 last:border-0">
                                     <div className="flex items-center gap-3">
                                         <span className="text-slate-500 capitalize">{log.type} notification</span>

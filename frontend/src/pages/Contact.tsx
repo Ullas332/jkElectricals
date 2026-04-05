@@ -200,6 +200,7 @@ const ContactPage = () => {
 
     try {
       const recaptchaToken = await new Promise<string>((resolve, reject) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const grecaptcha = (window as any).grecaptcha;
         if (!grecaptcha) {
           reject(new Error("reCAPTCHA not loaded. Please refresh and try again."));
@@ -226,8 +227,8 @@ const ContactPage = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       setSubmitted(true);
-    } catch (err: any) {
-      setError(err.message || "Failed to send. Please try again or call us directly.");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Failed to send. Please try again or call us directly.");
     } finally {
       setLoading(false);
     }

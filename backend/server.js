@@ -87,7 +87,7 @@ app.use("/api/admin", clerkMiddleware(), haltOnTimeout, adminRoute);
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 // ── 11. Global error handler ───────────────────────────────────────────────
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
     if (req.timedout) {
         return res.status(503).json({ success: false, error: "Request timed out. Please try again." });
     }
